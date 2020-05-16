@@ -31,8 +31,8 @@
     ];
 
     // socket
-    var socket = io.connect('http://192.168.0.73:8080');
-    // var socket = io.connect('https://threephones.herokuapp.com/');
+    // var socket = io.connect('http://192.168.0.73:8080');
+    var socket = io.connect('https://threephones.herokuapp.com/');
 
     socket.on('connect', () => {
 
