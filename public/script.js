@@ -17,7 +17,10 @@
     let deetsInt;
     let snoopDeets;
     let snoopDeetsCount = 0;
-
+        // imgs
+    let backgroundImg = document.getElementById('background-img');
+    let perspective = document.getElementById('perspective');
+    let imgs = [];
         // three.js
     let scene, camera, form, cameraInt;
     let currentPos = 0;
@@ -28,8 +31,8 @@
     ];
 
     // socket
-    // var socket = io.connect('http://192.168.0.73:8080');
-    var socket = io.connect('https://threephones.herokuapp.com/');
+    var socket = io.connect('http://192.168.0.73:8080');
+    // var socket = io.connect('https://threephones.herokuapp.com/');
 
     socket.on('connect', () => {
 
@@ -40,6 +43,25 @@
         });
 
     });
+
+    // load imgs
+    for (var i = 0; i <= 9; i++) {
+        var img = new Image();
+        // img.id = `blursed${i}`;
+        img.classList.add(`blursed`);
+        img.src = `/assets/blursed_${i}.PNG`;
+        imgs.push(img);
+        console.log(img.src, img.classList);
+        img.onload = function() {
+            console.log('loaded');
+            if (imgs.length === 10) {
+                for (var i = 0; i < imgs.length; i++) {
+                    perspective.appendChild(imgs[i]);
+                };
+                blursed();
+            };
+        };
+    };
 
     // ip stuff
     $.get({
@@ -93,7 +115,7 @@
                 `geolocation _ ${navigator.geolocation ? 'geolocation supported' : 'geolocation not supported by browser'}`
             ];
 
-            deetsInt = setInterval(terminal, 500);
+            setTimeout(() => deetsInt = setInterval(terminal, 800), 5000);
         }
     });
 
@@ -111,11 +133,17 @@
     titlechange();
 
     function terminal() {
-        info.innerHTML = info.innerHTML + `<p>${snoopDeets[snoopDeetsCount]}</p>`;
+        let p = document.createElement('p');
+        p.innerText = snoopDeets[snoopDeetsCount];
+        info.appendChild(p);
         snoopDeetsCount++;
         if (snoopDeetsCount > snoopDeets.length - 1) {
             clearInterval(deetsInt);
         };
+    };
+
+    function blursed() {
+
     };
 
     function moveCamera() {
@@ -151,62 +179,66 @@
     cameraInt = setInterval(moveCamera, rando(10000, 3000));
 
     // three.js
-    scene = new THREE.Scene();
-    camera = new THREE.PerspectiveCamera( 75, window.innerWidth/window.innerHeight, 0.1, 1000 );
+    function threeInit() {
+        scene = new THREE.Scene();
+        camera = new THREE.PerspectiveCamera( 75, window.innerWidth/window.innerHeight, 0.1, 1000 );
 
-    var renderer = new THREE.WebGLRenderer({ alpha: true });
-    renderer.setClearColor( 0x000000, 0 );
-    renderer.setSize( window.innerWidth, window.innerHeight );
-    renderer.setPixelRatio(window.devicePixelRatio);
-    document.body.appendChild( renderer.domElement );
+        var renderer = new THREE.WebGLRenderer({ alpha: true });
+        renderer.setClearColor( 0x000000, 0 );
+        renderer.setSize( window.innerWidth, window.innerHeight );
+        renderer.setPixelRatio(window.devicePixelRatio);
+        document.body.appendChild( renderer.domElement );
 
-    var directionalLight = new THREE.DirectionalLight( 0xffffff, 0.8 );
-    directionalLight.position.set(2, 2, 2)
-    scene.add( directionalLight );
+        var directionalLight = new THREE.DirectionalLight( 0xffffff, 0.8 );
+        directionalLight.position.set(2, 2, 2)
+        scene.add( directionalLight );
 
         // form 1
-    var geometry = new THREE.SphereGeometry(1, 128, 128);
-    // var material = new THREE.MeshNormalMaterial();
-    var material = new THREE.MeshPhongMaterial ({
-        color: 0xffffff,
-        emissive: 0x00ddff,
-        emissiveIntensity: 0.1,
-        metalness: 0.9,
-        reflectivity: 0.9
-    });
-    form = new THREE.Mesh(geometry, material);
-    form.position.set(0, 0, 0);
-    form.scale.set(2, 3, 1);
-    scene.add(form);
+        var geometry = new THREE.SphereGeometry(1, 128, 128);
+        // var material = new THREE.MeshNormalMaterial();
+        var material = new THREE.MeshPhongMaterial ({
+            color: 0xffffff,
+            emissive: 0x00ddff,
+            emissiveIntensity: 0.1,
+            metalness: 0.9,
+            reflectivity: 0.9
+        });
+        form = new THREE.Mesh(geometry, material);
+        form.position.set(0, 0, 0);
+        form.scale.set(2, 3, 1);
+        scene.add(form);
 
-    camera.position.set(0, 0, 6);
-    // camera.lookAt(formLocations[0][0], formLocations[0][1], formLocations[0][2]);
+        camera.position.set(0, 0, 6);
+        // camera.lookAt(formLocations[0][0], formLocations[0][1], formLocations[0][2]);
 
-    var simplex = new SimplexNoise();
-    var update = function() {
-        var time = performance.now() * 0.00003;
-        var k = 1;
-        for (var i = 0; i < form.geometry.vertices.length; i++) {
-            var p = form.geometry.vertices[i];
-            p.normalize().multiplyScalar(1 + 0.7 * simplex.noise2D(p.x * k + time, p.y * k + time));
+        var simplex = new SimplexNoise();
+        var update = function() {
+            var time = performance.now() * 0.00003;
+            var k = 1;
+            for (var i = 0; i < form.geometry.vertices.length; i++) {
+                var p = form.geometry.vertices[i];
+                p.normalize().multiplyScalar(1 + 0.7 * simplex.noise2D(p.x * k + time, p.y * k + time));
+            };
+            form.geometry.verticesNeedUpdate = true;
+            form.geometry.computeVertexNormals();
+            form.geometry.normalsNeedUpdate = true;
         };
-        form.geometry.verticesNeedUpdate = true;
-        form.geometry.computeVertexNormals();
-        form.geometry.normalsNeedUpdate = true;
-    };
-    update();
+        update();
 
-    var animate = function () {
-        requestAnimationFrame( animate );
-        form.rotation.x += 0.003;
-        form.rotation.y += 0.003;
-        TWEEN.update();
-        // update();
-        renderer.render( scene, camera );
-    };
+        var animate = function () {
+            requestAnimationFrame( animate );
+            form.rotation.x += 0.003;
+            form.rotation.y += 0.003;
+            TWEEN.update();
+            // update();
+            renderer.render( scene, camera );
+        };
 
-    animate();
+        animate();
+    }
 
     // other
+    setTimeout(() => backgroundImg.style.opacity = '1', 1000);
+    setTimeout(() => threeInit(), 3000);
 
 }());
