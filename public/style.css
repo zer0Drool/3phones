@@ -57,7 +57,7 @@ body {
 
 #info p {
     display: block;
-    font-size: 11px;
+    font-size: 14px;
     color: deeppink;
     text-shadow: 1px 1px 1px aqua;
     animation: fade 0.3s 1;
