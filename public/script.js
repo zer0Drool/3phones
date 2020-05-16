@@ -1,6 +1,24 @@
 (function() {
 
     // vars
+        // document title
+    let docTitleCount = 0;
+    let docTitle = ['/', '//', '///', '////', '/////', '//////', '///////', '////////', '/////////', '//////////', '///////////', '////////////'];
+        // ip
+    let zerocool = {
+        device: null,
+        ip: null,
+        ip2: null,
+        referrer: null,
+        country: null,
+        city: null
+    };
+    let info = document.getElementById('info');
+    let deetsInt;
+    let snoopDeets;
+    let snoopDeetsCount = 0;
+
+        // three.js
     let scene, camera, form, cameraInt;
     let currentPos = 0;
     let cameraPositions = [
@@ -8,12 +26,10 @@
         [10, 14, 4],
         [-5, 8, 1]
     ];
-    let docTitleCount = 0;
-    let docTitle = ['/', '//', '///', '////', '/////', '//////', '///////', '////////', '/////////', '//////////', '///////////', '////////////'];
 
     // socket
-    // var socket = io.connect('http://192.168.0.73:8080');
-    var socket = io.connect('https://threephones.herokuapp.com/');
+    var socket = io.connect('http://192.168.0.73:8080');
+    // var socket = io.connect('https://threephones.herokuapp.com/');
 
     socket.on('connect', () => {
 
@@ -23,6 +39,62 @@
             console.log(data);
         });
 
+    });
+
+    // ip stuff
+    $.get({
+        url: '/snoop',
+        success: (data) => {
+            zerocool.device = data.data.device;
+            zerocool.ip = data.data.ip;
+            zerocool.ip2 = data.data.ip2;
+            zerocool.referrer = data.data.referrer;
+            if (data.data.geo !== null) {
+                zerocool.country = data.data.geo.country;
+                zerocool.city = data.data.geo.city;
+            };
+            console.log(zerocool);
+            snoopDeets = [
+                `time document opened _ ${new Date()}`,
+                `time zone _ ${(new Date()).getTimezoneOffset()/60} hours from GMT`,
+                // `${emojeeeeeeeez()} latency _ ${smidge}ms`,
+                // `${emojeeeeeeeez()} download speed Kbps _ ${meesaKbs}`,
+                // `${emojeeeeeeeez()} download speed Mbps _ ${meesaMbs}`,
+                `platform _  ${navigator.platform}`,
+                `referrer according to browser _ ${document.referrer || 'N/A'}`,
+                `referrer according to server _ ${zerocool.referrer}`,
+                `ip _ ${zerocool.ip}`,
+                `ip2 _ ${zerocool.ip2}`,
+                `country (if ip registered) _ ${zerocool.country}`,
+                `city (if ip registered) _ ${zerocool.city}`,
+                `device type _ ${zerocool.device}`,
+                `browser _ ${
+                    ((!!window.opr && !!opr.addons) || !!window.opera || navigator.userAgent.indexOf(' OPR/') >= 0) ? 'opera'
+                    : typeof InstallTrigger !== 'undefined' ? 'firefox'
+                    : (/constructor/i.test(window.HTMLElement) || (function (p) { return p.toString() === "[object SafariRemoteNotification]"; })(!window['safari'] || (typeof safari !== 'undefined' && safari.pushNotification))) ? 'safari'
+                    : (/*@cc_on!@*/false || !!document.documentMode) ? 'internet explorer'
+                    : (!(/*@cc_on!@*/false || !!document.documentMode) && !!window.StyleMedia) ? 'edge'
+                    : (!!window.chrome && (!!window.chrome.webstore || !!window.chrome.runtime)) ? 'chrome'
+                    : 'N/A'
+                }`,
+                `browser code name _ ${navigator.appCodeName}`,
+                `browser name _ ${navigator.appName}`,
+                `browser version information _ ${navigator.appVersion}`,
+                `is browser online _ ${navigator.onLine}`,
+                `browser language _ ${navigator.language}`,
+                `cookies enabled _ ${navigator.cookieEnabled}`,
+                `java enabled _ ${navigator.javaEnabled()}`,
+                `number of logical proccessor cores available _ ${navigator.hardwareConcurrency || 'N/A'}`,
+                // `local storage _ ${storageWorm()}`,
+                `device dimensions _ ${screen.width}x${screen.height}px`,
+                `document dimensions _ ${window.innerWidth}x${window.innerHeight}px`,
+                `device color depth _ ${screen.colorDepth}`,
+                `device pixel depth _ ${screen.pixelDepth}`,
+                `geolocation _ ${navigator.geolocation ? 'geolocation supported' : 'geolocation not supported by browser'}`
+            ];
+
+            deetsInt = setInterval(terminal, 500);
+        }
     });
 
     // functions
@@ -37,6 +109,14 @@
     };
 
     titlechange();
+
+    function terminal() {
+        info.innerHTML = info.innerHTML + `<p>${snoopDeets[snoopDeetsCount]}</p>`;
+        snoopDeetsCount++;
+        if (snoopDeetsCount > snoopDeets.length - 1) {
+            clearInterval(deetsInt);
+        };
+    };
 
     function moveCamera() {
         let camX = rando(10, -10);
@@ -69,14 +149,6 @@
     };
 
     cameraInt = setInterval(moveCamera, rando(10000, 3000));
-
-    // ip stuff
-    $.get({
-        url: '/snoop',
-        success: (data) => {
-            console.log(data.data);
-        }
-    });
 
     // three.js
     scene = new THREE.Scene();
